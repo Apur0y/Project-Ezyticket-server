@@ -122,24 +122,6 @@ async function run() {
 
     // -------------Tavel API----------------
 
-    app.get("/api/bus", async (req, res) => {
-      const result = await travelCollection.find().toArray()
-      res.send(result)
-    })
-    // search api 
-    app.get("/api/stand", async (req, res) => {
-      const { stand1, stand2 } = req.query; 
-        if (!stand1 || !stand2) {
-            return res.status(400).json({ message: "Both stand1 and stand2 are required" });
-        }
-        const allBus = await travelCollection.find().toArray();
-        const result = allBus.filter(bus =>
-          bus.busStands.includes(stand1) && bus.busStands.includes(stand2)
-        );
-        res.send(result); 
-    })
-    // -------------Tavel API End----------------
-
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
