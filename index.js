@@ -25,6 +25,7 @@ app.use(cookieParser());
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ome3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const uri = `${process.env.DB_URI}`
 
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -121,6 +122,25 @@ async function run() {
     });
 
     // -------------Tavel API----------------
+
+    app.get("/api/bus", async (req, res) => {
+      const result = await travelCollection.find().toArray()
+      res.send(result)
+    })
+
+    // search api 
+    app.get("/api/stand", async (req, res) => {
+      const { stand1, stand2 } = req.query; 
+        if (!stand1 || !stand2) {
+            return res.status(400).json({ message: "Both stand1 and stand2 are required" });
+        }
+        const allBus = await travelCollection.find().toArray();
+        const result = allBus.filter(bus =>
+          bus.busStands.includes(stand1) && bus.busStands.includes(stand2)
+        );
+        res.send(result); 
+    })
+    // -------------Tavel API End----------------
 
     await client.db("admin").command({ ping: 1 });
     console.log(
