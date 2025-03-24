@@ -52,7 +52,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db('ezyTicket').collection('users')
     const eventCollection = client.db('ezyTicket').collection('events')
-    const travelCollection = client.db('ezyTicket').collection('travels')
+    const busTicketCollection = client.db('ezyTicket').collection('bus_tickets')
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -125,7 +125,7 @@ async function run() {
     // -------------Tavel API----------------
 
     app.get("/api/bus", async (req, res) => {
-      const result = await travelCollection.find().toArray()
+      const result = await busTicketCollection.find().toArray()
       res.send(result)
     })
 
@@ -135,7 +135,7 @@ async function run() {
         if (!stand1 || !stand2) {
             return res.status(400).json({ message: "Both stand1 and stand2 are required" });
         }
-        const allBus = await travelCollection.find().toArray();
+        const allBus = await busTicketCollection.find().toArray();
         const result = allBus.filter(bus =>
           bus.from.includes(stand1) && bus.to.includes(stand2)
         );
