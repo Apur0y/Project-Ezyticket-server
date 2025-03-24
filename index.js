@@ -52,6 +52,10 @@ async function run() {
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
 
+    app.get("/", (req, res) => {
+      res.send("EzyTicket server is Running");
+    });
+
     //  -------------User API-------------
     app.post("/api/user", async (req, res) => {
       const user = res.body;
@@ -67,7 +71,7 @@ async function run() {
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
     -------------------------------------------------------------- */
-    // working on jwt dont touch anything
+    // working on jwt don't touch anything
     app.post("/jwt", async (req, res) => {
       const email = req.body;
       const token = jwt.sign(email, process.env.JWT_SECRET_TOKEN, {
@@ -81,23 +85,19 @@ async function run() {
         })
         .send({ success: true });
     });
-    // remove token from brouser  cookie
+    // remove token from browser  cookie
     app.post("/logout", async (req, res) => {
       const user = req.body;
       res
         .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
         .send({ success: true });
     });
-    // jwt Related Work ends here dont touch anything jwt related code
+    // jwt Related Work ends here don't touch anything jwt related code
     /* --------------------------------------------------------------
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
 
     // ------------Events API-------------
-    app.get("/", (req, res) => {
-      res.send("EzyTicket server is Running");
-    });
-
     app.get("/events", async (req, res) => {
       if (!eventCollection) {
         return res.status(500).send({ message: "Database not initialized" });
@@ -113,7 +113,7 @@ async function run() {
 
     app.get("/events/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await eventCollection.findOne(query);
       res.send(result);
