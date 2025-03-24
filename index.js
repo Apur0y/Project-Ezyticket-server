@@ -22,8 +22,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ome3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-// const uri = `${process.env.DB_uri}`
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ome3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `${process.env.DB_URI}`
+
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -49,16 +50,22 @@ async function run() {
   try {
     await client.connect();
     // Send a ping to confirm a successful connection
-    const userCollection = client.db("ezyTicket").collection("users");
-    const eventCollection = client.db("ezyTicket").collection("events");
+    const userCollection = client.db('ezyTicket').collection('users')
+    const eventCollection = client.db('ezyTicket').collection('events')
+    const busTicketCollection = client.db('ezyTicket').collection('bus_tickets')
+    const movieTicketCollection = client.db('ezyTicket').collection('movie_tickets')
+
+    app.get("/", (req, res) => {
+      res.send("EzyTicket server is Running");
+    });
 
     //  -------------User API-------------
-    app.post("/api/user", async (req, res) => {
+    app.post('/api/user', async (req, res) => {
       const user = res.body;
-      const query = { email: user.email };
+      const query = { email: user.email }
       const existingUser = await userCollection.findOne(query);
       if (existingUser) {
-        return res.send({ message: "User already exists", insertedId: null });
+        return res.send({ message: 'User already exists', insertedId: null })
       }
       const result = await userCollection.post(user);
 
@@ -67,7 +74,7 @@ async function run() {
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
     -------------------------------------------------------------- */
-    // working on jwt dont touch anything
+    // working on jwt don't touch anything
     app.post("/jwt", async (req, res) => {
       const email = req.body;
       const token = jwt.sign(email, process.env.JWT_SECRET_TOKEN, {
@@ -81,14 +88,14 @@ async function run() {
         })
         .send({ success: true });
     });
-    // remove token from brouser  cookie
+    // remove token from browser  cookie
     app.post("/logout", async (req, res) => {
       const user = req.body;
       res
         .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
         .send({ success: true });
     });
-    // jwt Related Work ends here dont touch anything jwt related code
+    // jwt Related Work ends here don't touch anything jwt related code
     /* --------------------------------------------------------------
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
@@ -115,7 +122,8 @@ async function run() {
     app.get("/events/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
-      const query = { _id: new ObjectId(id) };
+      const query = { _id: new ObjectId(id) }
+
       const result = await eventCollection.findOne(query);
       res.send(result);
     });
