@@ -53,6 +53,7 @@ async function run() {
     const userCollection = client.db('ezyTicket').collection('users')
     const eventCollection = client.db('ezyTicket').collection('events')
     const busTicketCollection = client.db('ezyTicket').collection('bus_tickets')
+    const movieTicketCollection = client.db('ezyTicket').collection('movie_tickets')
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
