@@ -136,7 +136,7 @@ async function run() {
         }
         const allBus = await travelCollection.find().toArray();
         const result = allBus.filter(bus =>
-          bus.busStands.includes(stand1) && bus.busStands.includes(stand2)
+          bus.from.includes(stand1) && bus.to.includes(stand2)
         );
         res.send(result); 
     })
