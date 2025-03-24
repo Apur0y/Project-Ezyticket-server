@@ -123,7 +123,7 @@ async function run() {
       res.send(result);
     });
 
-    // -------------Tavel API----------------
+    // -------------Tavel API---------------------
 
     app.get("/api/bus", async (req, res) => {
       const result = await busTicketCollection.find().toArray()
