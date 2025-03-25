@@ -63,6 +63,18 @@ async function run() {
       res.send("EzyTicket server is Running");
     });
 
+    //  -------------User API-------------
+    app.post("/api/user", async (req, res) => {
+      const user = res.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await userCollection.post(user);
+
+      res.send(result);
+    });
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
     -------------------------------------------------------------- */
