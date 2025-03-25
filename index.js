@@ -55,32 +55,14 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
-    const MyWishListCollection = client
-      .db("ezyTicket")
-      .collection("mywishlist");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
     });
 
-    //  -------------User API-------------
-    app.post("/api/user", async (req, res) => {
-      const user = res.body;
-      const query = { email: user.email };
-      const existingUser = await userCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: "User already exists", insertedId: null });
-      }
-      const result = await userCollection.post(user);
-
-      res.send(result);
-    });
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
     -------------------------------------------------------------- */
@@ -109,6 +91,53 @@ async function run() {
     /* --------------------------------------------------------------
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
+
+    //  -------------User API-------------
+    app.post("/api/user", async (req, res) => {
+      const user = res.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await userCollection.post(user);
+
+      res.send(result);
+    });
+
+    // check Admin
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'Forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'admin'
+      }
+      res.send({ admin })
+    })
+
+    // Check Agent
+    app.get('/users/agent/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'Forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let agent = false;
+      if (user) {
+        agent = user?.role === 'agent'
+      }
+      res.send({ agent })
+    })
 
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
