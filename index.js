@@ -1,5 +1,5 @@
-const express = require("express");
 require("dotenv").config();
+const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -14,6 +14,10 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5173",
       "http://localhost:3000",
+      // "https://ezy-tricket.firebaseapp.com",
+      // "https://ezy-tricket.web.app",
+      "https://ezyticket-7198b.web.app",
+      "https://ezyticket-7198b.firebaseapp.com"
     ],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -47,16 +51,13 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -103,6 +104,53 @@ async function run() {
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
 
+    //  -------------User API-------------
+    app.post("/api/user", async (req, res) => {
+      const user = res.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User already exists", insertedId: null });
+      }
+      const result = await userCollection.post(user);
+
+      res.send(result);
+    });
+
+    // check Admin
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'Forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'admin'
+      }
+      res.send({ admin })
+    })
+
+    // Check Agent
+    app.get('/users/agent/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'Forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let agent = false;
+      if (user) {
+        agent = user?.role === 'agent'
+      }
+      res.send({ agent })
+    })
+
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
       if (!eventCollection) {
@@ -125,6 +173,52 @@ async function run() {
       const result = await eventCollection.findOne(query);
       res.send(result);
     });
+
+    //------------MyWishListAPI--------------
+
+    //added wishlist api 
+    app.post("/wishlist", async (req, res) => {
+      try {
+        const wishlist = req.body;
+
+        const existingItem = await MyWishListCollection.findOne({
+          eventId: wishlist.eventId,
+          userEmail: wishlist.userEmail,
+        });
+
+        if (existingItem) {
+          return res
+            .status(400)
+            .send({ message: "Event is already in your wishlist" });
+        }
+
+        const result = await MyWishListCollection.insertOne(wishlist);
+        res.send(result);
+      } catch (error) {
+        console.error("Event saving to wishlist:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
+    // Modify the /wishlist route to include token verification
+    app.get("/wishlist", verifyToken, async (req, res) => {
+      try {
+        const userEmail = req.user.email; // Use the decoded user email from the token
+        if (!userEmail) {
+          return res.status(400).send({ message: "User email is required" });
+        }
+        const wishlistItems = await MyWishListCollection.find({
+          userEmail,
+        }).toArray();
+
+        res.send(wishlistItems);
+      } catch (error) {
+        console.error("Error fetching wishlist:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
+    //------------MyWishListAPI--------------
 
     // -------------Tavel API---------------------
 
@@ -149,10 +243,10 @@ async function run() {
     });
     // -------------Tavel API End----------------
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
