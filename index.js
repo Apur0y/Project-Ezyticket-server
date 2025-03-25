@@ -14,8 +14,10 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://ezy-tricket.firebaseapp.com",
-      "https://ezy-tricket.web.app"
+      // "https://ezy-tricket.firebaseapp.com",
+      // "https://ezy-tricket.web.app",
+      "https://ezyticket-7198b.web.app",
+      "https://ezyticket-7198b.firebaseapp.com"
     ],
     credentials: true,
     optionsSuccessStatus: 200,
