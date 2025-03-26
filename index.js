@@ -51,7 +51,7 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
@@ -121,35 +121,36 @@ async function run() {
     app.get('/users/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'Forbidden access' })
+      if (email !== req.user.email) {
+          return res.status(403).send({ message: 'Forbidden access' })
       }
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
       let admin = false;
       if (user) {
-        admin = user?.role === 'admin'
+          admin = user?.role === 'admin'
       }
       res.send({ admin })
-    })
+  })
+  
 
-    // Check Agent
-    app.get('/users/agent/:email', verifyToken, async (req, res) => {
+    // Check Manager
+    app.get('/users/manager/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'Forbidden access' })
+      if (email !== req.user.email) {
+          return res.status(403).send({ message: 'Forbidden access' })
       }
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      let agent = false;
+      let manager = false;
       if (user) {
-        agent = user?.role === 'agent'
+          manager = user?.role === 'manager'
       }
-      res.send({ agent })
-    })
+      res.send({ manager })
+  })
 
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
@@ -243,10 +244,10 @@ async function run() {
     });
     // -------------Tavel API End----------------
 
-    // await client.db("admin").command({ ping: 1 });
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
+    await client.db("admin").command({ ping: 1 });
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
