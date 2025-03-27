@@ -18,7 +18,7 @@ app.use(
       // "https://ezy-tricket.web.app",
       "https://ezyticket-7198b.web.app",
       "https://ezyticket-7198b.firebaseapp.com",
-      "https://ezy-ticket-server.vercel.app"
+      "https://ezy-ticket-server.vercel.app",
     ],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -56,9 +56,15 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
-    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
-    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
+    const busTicketCollection = client
+      .db("ezyTicket")
+      .collection("bus_tickets");
+    const movieTicketCollection = client
+      .db("ezyTicket")
+      .collection("movie_tickets");
+    const MyWishListCollection = client
+      .db("ezyTicket")
+      .collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -119,39 +125,38 @@ async function run() {
     });
 
     // check Admin
-    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
       if (email !== req.user.email) {
-          return res.status(403).send({ message: 'Forbidden access' })
+        return res.status(403).send({ message: "Forbidden access" });
       }
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
       let admin = false;
       if (user) {
-          admin = user?.role === 'admin'
+        admin = user?.role === "admin";
       }
-      res.send({ admin })
-  })
-  
+      res.send({ admin });
+    });
 
     // Check Manager
-    app.get('/users/manager/:email', verifyToken, async (req, res) => {
+    app.get("/users/manager/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
       if (email !== req.user.email) {
-          return res.status(403).send({ message: 'Forbidden access' })
+        return res.status(403).send({ message: "Forbidden access" });
       }
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
       let manager = false;
       if (user) {
-          manager = user?.role === 'manager'
+        manager = user?.role === "manager";
       }
-      res.send({ manager })
-  })
+      res.send({ manager });
+    });
 
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
@@ -178,7 +183,7 @@ async function run() {
 
     //------------MyWishListAPI--------------
 
-    //added wishlist api 
+    //added wishlist api
     app.post("/wishlist", async (req, res) => {
       try {
         const wishlist = req.body;
@@ -199,6 +204,23 @@ async function run() {
       } catch (error) {
         console.error("Event saving to wishlist:", error);
         res.status(500).send({ message: "Internal server error" });
+      }
+    });
+    app.delete("/wishlist/:email/:eventId", async (req, res) => {
+      const { email, eventId } = req.params;
+      try {
+        const result = await wishlistCollection.deleteOne({
+          userEmail: email,
+          eventId: eventId,
+        });
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: "Event removed from wishlist" });
+        } else {
+          res.status(404).json({ message: "Event not found in wishlist" });
+        }
+      } catch (error) {
+        console.error("Error removing event from wishlist:", error);
+        res.status(500).json({ message: "Internal server error" });
       }
     });
 
