@@ -141,8 +141,8 @@ async function run() {
       res.send({ admin });
     });
 
-    // Check Manager
-    app.get("/users/manager/:email", verifyToken, async (req, res) => {
+    // ------------------Check Event Manager--------------------
+    app.get("/users/eventManager/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
       if (email !== req.user.email) {
@@ -151,11 +151,45 @@ async function run() {
 
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      let manager = false;
+      let eventManager = false;
       if (user) {
-        manager = user?.role === "manager";
+        eventManager = user?.role === "eventManager";
       }
-      res.send({ manager });
+      res.send({ eventManager });
+    });
+
+    // -----------------Check Travel Manager------------------
+    app.get("/users/travelManager/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let travelManager = false;
+      if (user) {
+        travelManager = user?.role === "travelManager";
+      }
+      res.send({ travelManager });
+    });
+
+    // ----------------Check Entertainment Manager--------------
+    app.get("/users/entertainmentManager/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (email !== req.user.email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let entertainmentManager = false;
+      if (user) {
+        entertainmentManager = user?.role === "entertainmentManager";
+      }
+      res.send({ entertainmentManager });
     });
 
     // ------------Events API-------------
