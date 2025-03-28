@@ -206,6 +206,20 @@ async function run() {
       res.send(result);
     });
 
+    app.patch('/verifyEvent/:id', verifyToken, async(req, res)=>{
+      const id = req.params.id;
+      const event = req.body;
+      const filter = {_id: new ObjectId(id)}
+      const updatedDoc = {
+        $set: {
+          status: event.status
+        }
+      }
+      const result = await eventCollection.updateOne(filter, updatedDoc);
+      res.send(result)
+    })
+
+    // ---------------Events API ends ------------------------
     app.post("/wishlist", async (req, res) => {
       try {
         const wishlist = req.body;
