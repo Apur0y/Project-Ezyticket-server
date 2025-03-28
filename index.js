@@ -157,21 +157,25 @@ async function run() {
     });
 
     // ----------------Check Entertainment Manager--------------
-    app.get("/users/entertainmentManager/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      // console.log(email)
-      if (email !== req.user.email) {
-        return res.status(403).send({ message: "Forbidden access" });
-      }
+    app.get(
+      "/users/entertainmentManager/:email",
+      verifyToken,
+      async (req, res) => {
+        const email = req.params.email;
+        // console.log(email)
+        if (email !== req.user.email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
 
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      let entertainmentManager = false;
-      if (user) {
-        entertainmentManager = user?.role === "entertainmentManager";
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        let entertainmentManager = false;
+        if (user) {
+          entertainmentManager = user?.role === "entertainmentManager";
+        }
+        res.send({ entertainmentManager });
       }
-      res.send({ entertainmentManager });
-    });
+    );
 
     // ------------Events API-------------
     app.get("/events", verifyToken, async (req, res) => {
@@ -196,19 +200,17 @@ async function run() {
       res.send(result);
     });
 
-    app.post('/events', async(req,res)=>{
+    app.post("/events", async (req, res) => {
       const event = req.body;
       const result = await eventCollection.insertOne(event);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    //------------MyWishListAPI--------------
-
-    //added wishlist api
     app.post("/wishlist", async (req, res) => {
       try {
         const wishlist = req.body;
 
+        // Check if event already exists in wishlist
         const existingItem = await MyWishListCollection.findOne({
           eventId: wishlist.eventId,
           userEmail: wishlist.userEmail,
@@ -220,17 +222,20 @@ async function run() {
             .send({ message: "Event is already in your wishlist" });
         }
 
+        // Insert event into wishlist
         const result = await MyWishListCollection.insertOne(wishlist);
-        res.send(result);
+        res.status(200).send(result);
       } catch (error) {
-        console.error("Event saving to wishlist:", error);
+        console.error("Error saving to wishlist:", error);
         res.status(500).send({ message: "Internal server error" });
       }
     });
+
+    // DELETE from wishlist
     app.delete("/wishlist/:email/:eventId", async (req, res) => {
       const { email, eventId } = req.params;
       try {
-        const result = await wishlistCollection.deleteOne({
+        const result = await MyWishListCollection.deleteOne({
           userEmail: email,
           eventId: eventId,
         });
@@ -245,17 +250,16 @@ async function run() {
       }
     });
 
-    // Modify the /wishlist route to include token verification
-    app.get("/wishlist", verifyToken, async (req, res) => {
+    // GET wishlist with authentication
+    app.get("/wishlist/:email", async (req, res) => {
       try {
-        const userEmail = req.user.email; // Use the decoded user email from the token
+        const userEmail = req.params.email;
         if (!userEmail) {
           return res.status(400).send({ message: "User email is required" });
         }
         const wishlistItems = await MyWishListCollection.find({
           userEmail,
         }).toArray();
-
         res.send(wishlistItems);
       } catch (error) {
         console.error("Error fetching wishlist:", error);
