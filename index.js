@@ -56,31 +56,12 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
-    const MyWishListCollection = client
-      .db("ezyTicket")
-      .collection("mywishlist");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
-    });
-
-    //  -------------User API-------------
-    app.post("/api/user", async (req, res) => {
-      const user = res.body;
-      const query = { email: user.email };
-      const existingUser = await userCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: "User already exists", insertedId: null });
-      }
-      const result = await userCollection.post(user);
-
-      res.send(result);
     });
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
@@ -197,7 +178,7 @@ async function run() {
     );
 
     // ------------Events API-------------
-    app.get("/events", async (req, res) => {
+    app.get("/events", verifyToken, async (req, res) => {
       if (!eventCollection) {
         return res.status(500).send({ message: "Database not initialized" });
       }
@@ -311,10 +292,8 @@ async function run() {
     });
     // -------------Tavel API End----------------
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+     await client.db("admin").command({ ping: 1 });
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
