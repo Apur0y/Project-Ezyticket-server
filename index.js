@@ -243,7 +243,7 @@ async function run() {
     app.delete("/wishlist/:email/:eventId", async (req, res) => {
       const { email, eventId } = req.params;
       try {
-        const result = await wishlistCollection.deleteOne({
+        const result = await MyWishListCollection.deleteOne({
           userEmail: email,
           eventId: eventId,
         });
