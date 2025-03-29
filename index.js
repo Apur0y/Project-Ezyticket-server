@@ -178,7 +178,7 @@ async function run() {
     );
 
     // ------------Events API-------------
-    app.get("/events", verifyToken, async (req, res) => {
+    app.get("/events", async (req, res) => {
       if (!eventCollection) {
         return res.status(500).send({ message: "Database not initialized" });
       }
