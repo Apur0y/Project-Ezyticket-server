@@ -200,16 +200,23 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/myAddedEvents/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { managerEmail: email };
+      const events = await eventCollection.find(query).toArray();
+      res.send(events);
+    })
+
     app.post("/events", async (req, res) => {
       const event = req.body;
       const result = await eventCollection.insertOne(event);
       res.send(result);
     });
 
-    app.patch('/verifyEvent/:id', verifyToken, async(req, res)=>{
+    app.patch('/verifyEvent/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const event = req.body;
-      const filter = {_id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) }
       const updatedDoc = {
         $set: {
           status: event.status
@@ -217,6 +224,13 @@ async function run() {
       }
       const result = await eventCollection.updateOne(filter, updatedDoc);
       res.send(result)
+    })
+
+    app.delete("/events/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await eventCollection.deleteOne(query);
+      res.send(result);
     })
 
     // ---------------Events API ends ------------------------
@@ -306,8 +320,8 @@ async function run() {
     });
     // -------------Tavel API End----------------
 
-     await client.db("admin").command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
