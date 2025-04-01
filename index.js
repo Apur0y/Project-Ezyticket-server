@@ -105,6 +105,14 @@ async function run() {
       res.send(result);
     });
 
+    //get current userInfo
+    app.get('/users/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await userCollection.find(query).toArray();
+      res.send(user);
+    })
+
     // check Admin
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
