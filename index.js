@@ -92,6 +92,8 @@ async function run() {
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
 
+    //--------------- Common API -------------
+
     //  -------------User API-------------
     app.post("/api/user", async (req, res) => {
       const user = res.body;
@@ -105,6 +107,16 @@ async function run() {
       res.send(result);
     });
 
+    //get all users
+    app.get('/users', async (req, res) => {
+      try {
+        const users = await userCollection.find().toArray();
+        res.send(users);
+      } catch (error) {
+        res.status(500).send({ message: 'Error fetching users' });
+      }
+    });
+
     //get current userInfo
     app.get('/users/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
@@ -112,6 +124,33 @@ async function run() {
       const user = await userCollection.find(query).toArray();
       res.send(user);
     })
+
+    app.patch("/users/role/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const {role} = req.body;
+
+        const filter = { _id: new ObjectId(id) }
+        const updateDoc = {
+          $set: {
+            role: role
+          }
+        }
+
+        const result = await userCollection.updateOne(filter, updateDoc);
+
+        if (result.modifiedCount > 0) {
+          res.json({ message: "User role updated successfully", modifiedCount: result.modifiedCount });
+        } else {
+          res.status(404).json({ message: "User not found or role unchanged" });
+        }
+      } catch (error) {
+        res.status(500).json({ message: "Failed to update role", error });
+      }
+    });
+
+
+    // -------------User API ends --------------------
 
     // check Admin
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
