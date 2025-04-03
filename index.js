@@ -125,6 +125,7 @@ async function run() {
       res.send(user);
     })
 
+    // Update user role.
     app.patch("/users/role/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -148,6 +149,24 @@ async function run() {
         res.status(500).json({ message: "Failed to update role", error });
       }
     });
+
+    // Delete User
+    app.delete('/users/:id', verifyToken, async(req, res)=>{
+      try {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)}
+        const result = await userCollection.deleteOne(query)
+
+        if(result.deletedCount > 0){
+          res.json({message: "User deleted Successfully", deletedCount: result.deletedCount})
+        }else{
+          res.status(404).json({message: "User not found"});
+        }
+      } catch (error) {
+        res.status(500).json({message: "Failed to delete user", error});
+      }
+
+    })
 
 
     // -------------User API ends --------------------
