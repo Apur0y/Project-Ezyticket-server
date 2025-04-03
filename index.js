@@ -222,6 +222,26 @@ async function run() {
       res.send({ travelManager });
     });
 
+
+        //--------------Entertainment API -------------
+
+        app.post("/movie_tickets",async(req,res)=>{
+
+          try {
+            const data=req.body;
+          const result = await movieTicketCollection.insertOne(data);
+          res.send(result)
+    
+          } catch (error) {
+            console.error(error.message)
+          }
+        })
+    
+        app.get("/movie_tickets",async(req,res)=>{
+          const result = await movieTicketCollection.find().toArray();
+          res.send(result)
+        })
+
     // ----------------Check Entertainment Manager--------------
     app.get(
       "/users/entertainmentManager/:email",
@@ -387,7 +407,9 @@ async function run() {
     // -------------Tavel API End----------------
 
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
