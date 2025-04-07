@@ -61,9 +61,18 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
-    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
-    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
+    const eventReviewCollection = client
+      .db("ezyTicket")
+      .collection("event_review");
+    const busTicketCollection = client
+      .db("ezyTicket")
+      .collection("bus_tickets");
+    const movieTicketCollection = client
+      .db("ezyTicket")
+      .collection("movie_tickets");
+    const MyWishListCollection = client
+      .db("ezyTicket")
+      .collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -117,40 +126,43 @@ async function run() {
     });
 
     //get all users
-    app.get('/users', async (req, res) => {
+    app.get("/users", async (req, res) => {
       try {
         const users = await userCollection.find().toArray();
         res.send(users);
       } catch (error) {
-        res.status(500).send({ message: 'Error fetching users' });
+        res.status(500).send({ message: "Error fetching users" });
       }
     });
 
     //get current userInfo
-    app.get('/users/:email', verifyToken, async (req, res) => {
+    app.get("/users/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.find(query).toArray();
       res.send(user);
-    })
+    });
 
     // Update user role.
     app.patch("/users/role/:id", async (req, res) => {
       try {
         const id = req.params.id;
-        const {role} = req.body;
+        const { role } = req.body;
 
-        const filter = { _id: new ObjectId(id) }
+        const filter = { _id: new ObjectId(id) };
         const updateDoc = {
           $set: {
-            role: role
-          }
-        }
+            role: role,
+          },
+        };
 
         const result = await userCollection.updateOne(filter, updateDoc);
 
         if (result.modifiedCount > 0) {
-          res.json({ message: "User role updated successfully", modifiedCount: result.modifiedCount });
+          res.json({
+            message: "User role updated successfully",
+            modifiedCount: result.modifiedCount,
+          });
         } else {
           res.status(404).json({ message: "User not found or role unchanged" });
         }
@@ -160,23 +172,24 @@ async function run() {
     });
 
     // Delete User
-    app.delete('/users/:id', verifyToken, async(req, res)=>{
+    app.delete("/users/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
-        const query = {_id: new ObjectId(id)}
-        const result = await userCollection.deleteOne(query)
+        const query = { _id: new ObjectId(id) };
+        const result = await userCollection.deleteOne(query);
 
-        if(result.deletedCount > 0){
-          res.json({message: "User deleted Successfully", deletedCount: result.deletedCount})
-        }else{
-          res.status(404).json({message: "User not found"});
+        if (result.deletedCount > 0) {
+          res.json({
+            message: "User deleted Successfully",
+            deletedCount: result.deletedCount,
+          });
+        } else {
+          res.status(404).json({ message: "User not found" });
         }
       } catch (error) {
-        res.status(500).json({message: "Failed to delete user", error});
+        res.status(500).json({ message: "Failed to delete user", error });
       }
-
-    })
-
+    });
 
     // -------------User API ends --------------------
 
@@ -231,6 +244,23 @@ async function run() {
       res.send({ travelManager });
     });
 
+    //--------------Entertainment API -------------
+
+    app.post("/movie_tickets", async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await movieTicketCollection.insertOne(data);
+        res.send(result);
+      } catch (error) {
+        console.error(error.message);
+      }
+    });
+
+    app.get("/movie_tickets", async (req, res) => {
+      const result = await movieTicketCollection.find().toArray();
+      res.send(result);
+    });
+
     // ----------------Check Entertainment Manager--------------
     app.get(
       "/users/entertainmentManager/:email",
@@ -275,12 +305,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/myAddedEvents/:email', verifyToken, async (req, res) => {
+    app.get("/myAddedEvents/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { managerEmail: email };
       const events = await eventCollection.find(query).toArray();
       res.send(events);
-    })
+    });
 
     app.post("/events", async (req, res) => {
       const event = req.body;
@@ -288,25 +318,60 @@ async function run() {
       res.send(result);
     });
 
-    app.patch('/verifyEvent/:id', verifyToken, async (req, res) => {
+    app.patch("/verifyEvent/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const event = req.body;
-      const filter = { _id: new ObjectId(id) }
+      const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          status: event.status
-        }
-      }
+          status: event.status,
+        },
+      };
       const result = await eventCollection.updateOne(filter, updatedDoc);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     app.delete("/events/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
+      const query = { _id: new ObjectId(id) };
       const result = await eventCollection.deleteOne(query);
       res.send(result);
-    })
+    });
+
+    app.post("/event-reviews", async (req, res) => {
+      const { eventId, comment, userEmail } = req.body;
+
+      if (!eventId || !comment || !userEmail) {
+        return res.status(400).send({ message: "Missing required fields" });
+      }
+
+      try {
+        const review = {
+          eventId: new ObjectId(eventId),
+          comment,
+          userEmail,
+          createdAt: new Date(),
+        };
+
+        const result = await eventReviewCollection.insertOne(review);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        res.status(500).send({ message: "Failed to add comment" });
+      }
+    });
+    app.get("/event-reviews", async (req, res) => {
+      if (!eventReviewCollection) {
+        return res.status(500).send({ message: "Database not initialized" });
+      }
+      try {
+        const events = await eventReviewCollection.find({}).toArray();
+        res.send(events);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        res.status(500).send({ message: "Failed to fetch events", error });
+      }
+    });
 
     // ---------------Events API ends ------------------------
     app.post("/wishlist", async (req, res) => {
@@ -396,7 +461,9 @@ async function run() {
     // -------------Tavel API End----------------
 
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
