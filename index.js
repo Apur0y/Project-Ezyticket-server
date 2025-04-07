@@ -56,18 +56,10 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const eventReviewCollection = client
-      .db("ezyTicket")
-      .collection("event_review");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
-    const MyWishListCollection = client
-      .db("ezyTicket")
-      .collection("mywishlist");
+    const eventReviewCollection = client.db("ezyTicket").collection("event_review");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
