@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const SSLCommerzPayment = require('sslcommerz-lts')
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -37,6 +38,10 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+const store_id = process.env.STORE_ID;
+const store_passwd = process.env.STORE_PASS;
+const is_live = false //true for live, false for sandbox
 
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
@@ -93,6 +98,10 @@ async function run() {
     -------------------------------------------------------------- */
 
     //--------------- Common API -------------
+    //------------SSLCOMMERZ-----------
+    app.post('/order', async(req,res)=>{
+      console.log(req.body);
+    })
 
     //  -------------User API-------------
     app.post("/api/user", async (req, res) => {
