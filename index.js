@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const SSLCommerzPayment = require('sslcommerz-lts')
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -38,6 +39,10 @@ const client = new MongoClient(uri, {
   },
 });
 
+const store_id = process.env.STORE_ID;
+const store_passwd = process.env.STORE_PASS;
+const is_live = false //true for live, false for sandbox
+
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).send({ message: "Unauthorized Access" });
@@ -56,22 +61,13 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const eventReviewCollection = client
-      .db("ezyTicket")
-      .collection("event_review");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
-
-      const cinemaHallCollection=client.db("ezyTicket").collection("cinemahalls"); 
-      const moviesCollection=client.db("ezyTicket").collection("allMovies"); 
-
-    const MyWishListCollection = client
-      .db("ezyTicket")
-      .collection("mywishlist");
+    const eventReviewCollection = client.db("ezyTicket").collection("event_review");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
+    const orderCollection = client.db("ezyTicket").collection("orders");
+    const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
+    const moviesCollection = client.db("ezyTicket").collection("allMovies");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -122,6 +118,83 @@ async function run() {
     });
 
     //--------------- Common API -------------
+
+    // ------------SSLCOMMERZE API----------
+    const tran_id = new ObjectId().toString(); //Creates a unique id
+    app.post('/order', async (req, res) => {
+
+      const order = req.body;
+      const data = {
+        total_amount: order.price,
+        currency: 'BDT',
+        tran_id: tran_id, // use unique tran_id for each api call
+        success_url: `http://localhost:3000/payment/success/${tran_id}`,
+        fail_url: `http://localhost:3000/payment/fail/${tran_id}`,
+        cancel_url: 'http://localhost:3000/cancel',
+        ipn_url: 'http://localhost:3030/ipn',
+        shipping_method: 'Courier',
+        product_name: 'Computer.',
+        product_category: 'tickets',
+        product_profile: 'general',
+        cus_name: order.name,
+        cus_email: order.email,
+        cus_add1: order.address,
+        cus_add2: 'Dhaka',
+        cus_city: 'Dhaka',
+        cus_state: 'Dhaka',
+        cus_postcode: '1000',
+        cus_country: 'Bangladesh',
+        cus_phone: order.phone,
+        cus_fax: '01711111111',
+        ship_name: 'Customer Name',
+        ship_add1: 'Dhaka',
+        ship_add2: 'Dhaka',
+        ship_city: 'Dhaka',
+        ship_state: 'Dhaka',
+        ship_postcode: 1000,
+        ship_country: 'Bangladesh',
+      };
+
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+      sslcz.init(data).then(apiResponse => {
+        console.log('API Response:', apiResponse);
+        // Redirect the user to payment gateway system
+        let GatewayPageURL = apiResponse.GatewayPageURL
+        res.send({ url: GatewayPageURL })
+
+        const finalOrder = {
+          order,
+          paidStatus: false,
+          transactionId: tran_id,
+        }
+        const result = orderCollection.insertOne(finalOrder);
+
+        console.log('Redirecting to: ', GatewayPageURL)
+      });
+    })
+
+    //Successful Payment
+    app.post('/payment/success/:tran_id', async (req, res) => {
+      console.log(req.params.tran_id);
+      const result = await orderCollection.updateOne(
+        { transactionId: req.params.tran_id }, {
+        $set: {
+          paidStatus: true
+        }
+      })
+
+      if (result.modifiedCount > 0) {
+        res.redirect(`http://localhost:5173/payment/success/${req.params.tran_id}`)
+      }
+    })
+
+    //Failed Payment
+    app.post('/payment/fail/:tran_id', async (req, res) => {
+      const result = await orderCollection.deleteOne({ transactionId: req.params.tran_id })
+      if (result.deletedCount) {
+        res.redirect(`http://localhost:5173/payment/fail/${req.params.tran_id}`)
+      }
+    })
 
     //  -------------User API-------------
     app.post("/api/user", async (req, res) => {
@@ -200,6 +273,24 @@ async function run() {
       } catch (error) {
         res.status(500).json({ message: "Failed to delete user", error });
       }
+    });
+
+    //Update User Profile
+    app.patch('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const updateData = req.body;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: {
+          email: updateData.email,
+          name: updateData.name,
+          phone: updateData.phone,
+          address: updateData.address
+        }
+      }
+      // Update user in database
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result)
     });
 
     // -------------User API ends --------------------
@@ -282,7 +373,7 @@ async function run() {
       }
     });
 
-    app.get('/cinemahalls',async(req,res)=>{
+    app.get('/cinemahalls', async (req, res) => {
       const result = await cinemaHallCollection.find().toArray();
       res.send(result)
     })
