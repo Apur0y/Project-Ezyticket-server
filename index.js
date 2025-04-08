@@ -118,11 +118,6 @@ async function run() {
     });
 
     //--------------- Common API -------------
-    //------------SSLCOMMERZ-----------
-    app.post('/order', async(req,res)=>{
-      console.log(req.body);
-    })
-
     // ------------SSLCOMMERZE API----------
     const tran_id = new ObjectId().toString(); //Creates a unique id
     app.post('/order', async (req, res) => {
