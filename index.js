@@ -65,6 +65,10 @@ async function run() {
     const movieTicketCollection = client
       .db("ezyTicket")
       .collection("movie_tickets");
+
+      const cinemaHallCollection=client.db("ezyTicket").collection("cinemahalls"); 
+      const moviesCollection=client.db("ezyTicket").collection("allMovies"); 
+
     const MyWishListCollection = client
       .db("ezyTicket")
       .collection("mywishlist");
@@ -267,6 +271,21 @@ async function run() {
       const result = await movieTicketCollection.find().toArray();
       res.send(result);
     });
+
+    app.post("/cinemahalls", async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await cinemaHallCollection.insertOne(data);
+        res.send(result);
+      } catch (error) {
+        console.error(error.message);
+      }
+    });
+
+    app.get('/cinemahalls',async(req,res)=>{
+      const result = await cinemaHallCollection.find().toArray();
+      res.send(result)
+    })
 
     // ----------------Check Entertainment Manager--------------
     app.get(
