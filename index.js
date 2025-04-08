@@ -120,7 +120,7 @@ async function run() {
     //--------------- Common API -------------
 
     // ------------SSLCOMMERZE API----------
-    const tran_id = new ObjectId().toString(); //Creates a unique id
+    const tran_id = new ObjectId().toString(); //Creates a unique id for transaction
     app.post('/order', async (req, res) => {
 
       const order = req.body;
