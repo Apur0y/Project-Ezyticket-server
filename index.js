@@ -450,7 +450,7 @@ async function run() {
       const result = await busTicketCollection.find().toArray();
       res.send(result);
     });
-
+    //  added bus ticket booking
     // search api
     app.get("/api/stand", async (req, res) => {
       const { stand1, stand2 } = req.query;
