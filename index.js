@@ -158,7 +158,7 @@ async function run() {
       const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
       sslcz.init(data).then(apiResponse => {
         console.log('API Response:', apiResponse);
-        // Redirect the user to payment gateway
+        // Redirect the user to payment gateway system
         let GatewayPageURL = apiResponse.GatewayPageURL
         res.send({ url: GatewayPageURL })
 
