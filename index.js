@@ -174,6 +174,24 @@ async function run() {
       }
     });
 
+    //Update User Profile
+    app.patch('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const updateData = req.body;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: {
+          email: updateData.email,
+          name: updateData.name,
+          phone: updateData.phone,
+          address: updateData.address
+        }
+      }
+      // Update user in database
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    });
+
     // -------------User API ends --------------------
 
     // check Admin
