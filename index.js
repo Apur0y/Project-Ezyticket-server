@@ -66,6 +66,8 @@ async function run() {
     const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
     const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
     const orderCollection = client.db("ezyTicket").collection("orders");
+    const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
+    const moviesCollection = client.db("ezyTicket").collection("allMovies");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -98,6 +100,22 @@ async function run() {
     /* --------------------------------------------------------------
                                 JWT ENDS HERE
     -------------------------------------------------------------- */
+    //  Save user info to database when user login
+    app.post("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const query = { email };
+      // check if user exists
+      const isExist = await userCollection.findOne(query);
+      if (isExist) {
+        return res.send(isExist);
+      }
+      const result = await userCollection.insertOne({
+        ...user,
+        timestamp: Date.now(),
+      });
+      res.send(result);
+    });
 
     //--------------- Common API -------------
 
@@ -159,21 +177,21 @@ async function run() {
     app.post('/payment/success/:tran_id', async (req, res) => {
       console.log(req.params.tran_id);
       const result = await orderCollection.updateOne(
-        {transactionId:req.params.tran_id}, {
+        { transactionId: req.params.tran_id }, {
         $set: {
           paidStatus: true
         }
       })
 
-      if(result.modifiedCount > 0){
+      if (result.modifiedCount > 0) {
         res.redirect(`http://localhost:5173/payment/success/${req.params.tran_id}`)
       }
     })
 
     //Failed Payment
-    app.post('/payment/fail/:tran_id', async(req, res)=>{
-      const result = await orderCollection.deleteOne({transactionId:req.params.tran_id})
-      if(result.deletedCount){
+    app.post('/payment/fail/:tran_id', async (req, res) => {
+      const result = await orderCollection.deleteOne({ transactionId: req.params.tran_id })
+      if (result.deletedCount) {
         res.redirect(`http://localhost:5173/payment/fail/${req.params.tran_id}`)
       }
     })
@@ -344,6 +362,21 @@ async function run() {
       const result = await movieTicketCollection.find().toArray();
       res.send(result);
     });
+
+    app.post("/cinemahalls", async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await cinemaHallCollection.insertOne(data);
+        res.send(result);
+      } catch (error) {
+        console.error(error.message);
+      }
+    });
+
+    app.get('/cinemahalls', async (req, res) => {
+      const result = await cinemaHallCollection.find().toArray();
+      res.send(result)
+    })
 
     // ----------------Check Entertainment Manager--------------
     app.get(
@@ -527,7 +560,7 @@ async function run() {
       const result = await busTicketCollection.find().toArray();
       res.send(result);
     });
-
+    //  added bus ticket booking
     // search api
     app.get("/api/stand", async (req, res) => {
       const { stand1, stand2 } = req.query;
