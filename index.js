@@ -57,7 +57,7 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
@@ -127,8 +127,8 @@ async function run() {
         total_amount: order.price,
         currency: 'BDT',
         tran_id: tran_id, // use unique tran_id for each api call
-        success_url: `http://localhost:3000/payment/success/${tran_id}`,
-        fail_url: `http://localhost:3000/payment/fail/${tran_id}`,
+        success_url: `${process.env.server}/payment/success/${tran_id}`,
+        fail_url: `${process.env.server}/payment/fail/${tran_id}`,
         cancel_url: 'http://localhost:3000/cancel',
         ipn_url: 'http://localhost:3030/ipn',
         shipping_method: 'Courier',
@@ -189,7 +189,7 @@ async function run() {
       })
 
       if (result.modifiedCount > 0) {
-        res.redirect(`http://localhost:5173/payment/success/${req.params.tran_id}`)
+        res.redirect(`${process.env.client}/payment/success/${req.params.tran_id}`)
       }
     })
 
@@ -197,7 +197,7 @@ async function run() {
     app.post('/payment/fail/:tran_id', async (req, res) => {
       const result = await orderCollection.deleteOne({ transactionId: req.params.tran_id })
       if (result.deletedCount) {
-        res.redirect(`http://localhost:5173/payment/fail/${req.params.tran_id}`)
+        res.redirect(`${process.env.client}/payment/fail/${req.params.tran_id}`)
       }
     })
 
@@ -590,10 +590,10 @@ async function run() {
     });
     // -------------Tavel API End----------------
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
