@@ -161,10 +161,16 @@ async function run() {
         let GatewayPageURL = apiResponse.GatewayPageURL
         res.send({ url: GatewayPageURL })
 
+        const paymentTime = new Date().toLocaleString('en-BD', {
+          timeZone: 'Asia/Dhaka',
+          hour12: true,
+        });
+
         const finalOrder = {
           order,
           paidStatus: false,
           transactionId: tran_id,
+          paymentTime: paymentTime
         }
         const result = orderCollection.insertOne(finalOrder);
 
@@ -193,6 +199,14 @@ async function run() {
       if (result.deletedCount) {
         res.redirect(`http://localhost:5173/payment/fail/${req.params.tran_id}`)
       }
+    })
+
+    //Get Order using transaction Id
+    app.get('/order/:id', async(req, res)=>{
+      const transactionId = req.params.id;
+      const query = {transactionId: transactionId}
+      const result = await orderCollection.findOne(query);
+      res.send(result)
     })
 
     //  -------------User API-------------
