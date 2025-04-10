@@ -391,6 +391,37 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/allmovies',async(req,res)=>{
+   try {
+        const movie= req.body;
+        const result= await moviesCollection.insertOne(movie);
+        res.send(result);
+      } catch (error) {
+        console.error(error.message);
+      }
+    })
+
+    app.get('/allmovies',async(req,res)=>{
+
+      const result =await moviesCollection.find().toArray();
+      res.send(result)
+
+    })
+
+    app.delete('/allmovies/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)}
+      const result= await moviesCollection.deleteOne(query);
+      res.send(result)
+    })
+
+    app.get('/allmovies/:id', async (req, res) => {
+      const id = req.params.id;
+      const movie = await moviesCollection.findOne({ _id: new ObjectId(id) });
+      res.send(movie);
+    });
+    
+
     // ----------------Check Entertainment Manager--------------
     app.get(
       "/users/entertainmentManager/:email",
