@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const SSLCommerzPayment = require('sslcommerz-lts')
+const SSLCommerzPayment = require("sslcommerz-lts");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -41,7 +41,7 @@ const client = new MongoClient(uri, {
 
 const store_id = process.env.STORE_ID;
 const store_passwd = process.env.STORE_PASS;
-const is_live = false //true for live, false for sandbox
+const is_live = false; //true for live, false for sandbox
 
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
@@ -61,12 +61,22 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const eventReviewCollection = client.db("ezyTicket").collection("event_review");
-    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
-    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
-    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
+    const eventReviewCollection = client
+      .db("ezyTicket")
+      .collection("event_review");
+    const busTicketCollection = client
+      .db("ezyTicket")
+      .collection("bus_tickets");
+    const movieTicketCollection = client
+      .db("ezyTicket")
+      .collection("movie_tickets");
+    const MyWishListCollection = client
+      .db("ezyTicket")
+      .collection("mywishlist");
     const orderCollection = client.db("ezyTicket").collection("orders");
-    const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
+    const cinemaHallCollection = client
+      .db("ezyTicket")
+      .collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
 
     app.get("/", (req, res) => {
@@ -120,49 +130,48 @@ async function run() {
     //--------------- Common API -------------
     // ------------SSLCOMMERZE API----------
     const tran_id = new ObjectId().toString(); //Creates a unique id for transaction
-    app.post('/order', async (req, res) => {
-
+    app.post("/order", async (req, res) => {
       const order = req.body;
       const data = {
         total_amount: order.price,
-        currency: 'BDT',
+        currency: "BDT",
         tran_id: tran_id, // use unique tran_id for each api call
         success_url: `${process.env.server}/payment/success/${tran_id}`,
         fail_url: `${process.env.server}/payment/fail/${tran_id}`,
-        cancel_url: 'http://localhost:3000/cancel',
-        ipn_url: 'http://localhost:3030/ipn',
-        shipping_method: 'Courier',
-        product_name: 'Computer.',
-        product_category: 'tickets',
-        product_profile: 'general',
+        cancel_url: "http://localhost:3000/cancel",
+        ipn_url: "http://localhost:3030/ipn",
+        shipping_method: "Courier",
+        product_name: "Computer.",
+        product_category: "tickets",
+        product_profile: "general",
         cus_name: order.name,
         cus_email: order.email,
         cus_add1: order.address,
-        cus_add2: 'Dhaka',
-        cus_city: 'Dhaka',
-        cus_state: 'Dhaka',
-        cus_postcode: '1000',
-        cus_country: 'Bangladesh',
+        cus_add2: "Dhaka",
+        cus_city: "Dhaka",
+        cus_state: "Dhaka",
+        cus_postcode: "1000",
+        cus_country: "Bangladesh",
         cus_phone: order.phone,
-        cus_fax: '01711111111',
-        ship_name: 'Customer Name',
-        ship_add1: 'Dhaka',
-        ship_add2: 'Dhaka',
-        ship_city: 'Dhaka',
-        ship_state: 'Dhaka',
+        cus_fax: "01711111111",
+        ship_name: "Customer Name",
+        ship_add1: "Dhaka",
+        ship_add2: "Dhaka",
+        ship_city: "Dhaka",
+        ship_state: "Dhaka",
         ship_postcode: 1000,
-        ship_country: 'Bangladesh',
+        ship_country: "Bangladesh",
       };
 
-      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
-      sslcz.init(data).then(apiResponse => {
-        console.log('API Response:', apiResponse);
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+      sslcz.init(data).then((apiResponse) => {
+        console.log("API Response:", apiResponse);
         // Redirect the user to payment gateway system
-        let GatewayPageURL = apiResponse.GatewayPageURL
-        res.send({ url: GatewayPageURL })
+        let GatewayPageURL = apiResponse.GatewayPageURL;
+        res.send({ url: GatewayPageURL });
 
-        const paymentTime = new Date().toLocaleString('en-BD', {
-          timeZone: 'Asia/Dhaka',
+        const paymentTime = new Date().toLocaleString("en-BD", {
+          timeZone: "Asia/Dhaka",
           hour12: true,
         });
 
@@ -170,44 +179,52 @@ async function run() {
           order,
           paidStatus: false,
           transactionId: tran_id,
-          paymentTime: paymentTime
-        }
+          paymentTime: paymentTime,
+        };
         const result = orderCollection.insertOne(finalOrder);
 
-        console.log('Redirecting to: ', GatewayPageURL)
+        console.log("Redirecting to: ", GatewayPageURL);
       });
-    })
+    });
 
     //Successful Payment
-    app.post('/payment/success/:tran_id', async (req, res) => {
+    app.post("/payment/success/:tran_id", async (req, res) => {
       console.log(req.params.tran_id);
       const result = await orderCollection.updateOne(
-        { transactionId: req.params.tran_id }, {
-        $set: {
-          paidStatus: true
+        { transactionId: req.params.tran_id },
+        {
+          $set: {
+            paidStatus: true,
+          },
         }
-      })
+      );
 
       if (result.modifiedCount > 0) {
-        res.redirect(`${process.env.client}/payment/success/${req.params.tran_id}`)
+        res.redirect(
+          `${process.env.client}/payment/success/${req.params.tran_id}`
+        );
       }
-    })
+    });
 
     //Failed Payment
-    app.post('/payment/fail/:tran_id', async (req, res) => {
-      const result = await orderCollection.deleteOne({ transactionId: req.params.tran_id })
+    app.post("/payment/fail/:tran_id", async (req, res) => {
+      const result = await orderCollection.deleteOne({
+        transactionId: req.params.tran_id,
+      });
       if (result.deletedCount) {
-        res.redirect(`${process.env.client}/payment/fail/${req.params.tran_id}`)
+        res.redirect(
+          `${process.env.client}/payment/fail/${req.params.tran_id}`
+        );
       }
-    })
+    });
 
     //Get Order using transaction Id
-    app.get('/order/:id', async(req, res)=>{
+    app.get("/order/:id", async (req, res) => {
       const transactionId = req.params.id;
-      const query = {transactionId: transactionId}
+      const query = { transactionId: transactionId };
       const result = await orderCollection.findOne(query);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     //  -------------User API-------------
     app.post("/api/user", async (req, res) => {
@@ -289,7 +306,7 @@ async function run() {
     });
 
     //Update User Profile
-    app.patch('/users/:email', async (req, res) => {
+    app.patch("/users/:email", async (req, res) => {
       const email = req.params.email;
       const updateData = req.body;
       const filter = { email: email };
@@ -298,12 +315,12 @@ async function run() {
           email: updateData.email,
           name: updateData.name,
           phone: updateData.phone,
-          address: updateData.address
-        }
-      }
+          address: updateData.address,
+        },
+      };
       // Update user in database
       const result = await userCollection.updateOne(filter, updateDoc);
-      res.send(result)
+      res.send(result);
     });
 
     // -------------User API ends --------------------
@@ -386,41 +403,38 @@ async function run() {
       }
     });
 
-    app.get('/cinemahalls', async (req, res) => {
+    app.get("/cinemahalls", async (req, res) => {
       const result = await cinemaHallCollection.find().toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
-    app.post('/allmovies',async(req,res)=>{
-   try {
-        const movie= req.body;
-        const result= await moviesCollection.insertOne(movie);
+    app.post("/allmovies", async (req, res) => {
+      try {
+        const movie = req.body;
+        const result = await moviesCollection.insertOne(movie);
         res.send(result);
       } catch (error) {
         console.error(error.message);
       }
-    })
+    });
 
-    app.get('/allmovies',async(req,res)=>{
+    app.get("/allmovies", async (req, res) => {
+      const result = await moviesCollection.find().toArray();
+      res.send(result);
+    });
 
-      const result =await moviesCollection.find().toArray();
-      res.send(result)
+    app.delete("/allmovies/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await moviesCollection.deleteOne(query);
+      res.send(result);
+    });
 
-    })
-
-    app.delete('/allmovies/:id',async(req,res)=>{
-      const id=req.params.id;
-      const query={_id:new ObjectId(id)}
-      const result= await moviesCollection.deleteOne(query);
-      res.send(result)
-    })
-
-    app.get('/allmovies/:id', async (req, res) => {
+    app.get("/allmovies/:id", async (req, res) => {
       const id = req.params.id;
       const movie = await moviesCollection.findOne({ _id: new ObjectId(id) });
       res.send(movie);
     });
-    
 
     // ----------------Check Entertainment Manager--------------
     app.get(
@@ -500,9 +514,18 @@ async function run() {
     });
 
     app.post("/event-reviews", async (req, res) => {
-      const { eventId, comment, userEmail } = req.body;
+      const {
+        eventId,
+        comment,
+        customerEmail,
+        customerName,
+        customerPhoto,
+        time,
+        category,
+        status,
+      } = req.body;
 
-      if (!eventId || !comment || !userEmail) {
+      if (!eventId || !comment || !customerEmail) {
         return res.status(400).send({ message: "Missing required fields" });
       }
 
@@ -510,7 +533,12 @@ async function run() {
         const review = {
           eventId: new ObjectId(eventId),
           comment,
-          userEmail,
+          customerEmail,
+          customerName,
+          customerPhoto,
+          time,
+          category,
+          status,
           createdAt: new Date(),
         };
 
