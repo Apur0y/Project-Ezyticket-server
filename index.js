@@ -380,7 +380,6 @@ async function run() {
     app.post('/allmovies',async(req,res)=>{
    try {
         const movie= req.body;
-        console.log(movie);
         const result= await moviesCollection.insertOne(movie);
         res.send(result);
       } catch (error) {
