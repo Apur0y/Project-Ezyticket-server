@@ -61,22 +61,12 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const eventReviewCollection = client
-      .db("ezyTicket")
-      .collection("event_review");
-    const busTicketCollection = client
-      .db("ezyTicket")
-      .collection("bus_tickets");
-    const movieTicketCollection = client
-      .db("ezyTicket")
-      .collection("movie_tickets");
-    const MyWishListCollection = client
-      .db("ezyTicket")
-      .collection("mywishlist");
+    const eventReviewCollection = client.db("ezyTicket").collection("event_review");
+    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
+    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
+    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
     const orderCollection = client.db("ezyTicket").collection("orders");
-    const cinemaHallCollection = client
-      .db("ezyTicket")
-      .collection("cinemahalls");
+    const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
 
     app.get("/", (req, res) => {
@@ -219,9 +209,9 @@ async function run() {
     });
 
     //Get Order using transaction Id
-    app.get("/order/:id", async (req, res) => {
+    app.get('/order/:id', async(req, res)=>{
       const transactionId = req.params.id;
-      const query = { transactionId: transactionId };
+      const query = {transactionId: transactionId}
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
@@ -376,6 +366,27 @@ async function run() {
       res.send({ travelManager });
     });
 
+    // ----------------Check Entertainment Manager--------------
+    app.get(
+      "/users/entertainmentManager/:email",
+      verifyToken,
+      async (req, res) => {
+        const email = req.params.email;
+        // console.log(email)
+        if (email !== req.user.email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        let entertainmentManager = false;
+        if (user) {
+          entertainmentManager = user?.role === "entertainmentManager";
+        }
+        res.send({ entertainmentManager });
+      }
+    );
+
     //--------------Entertainment API -------------
 
     app.post("/movie_tickets", async (req, res) => {
@@ -436,26 +447,7 @@ async function run() {
       res.send(movie);
     });
 
-    // ----------------Check Entertainment Manager--------------
-    app.get(
-      "/users/entertainmentManager/:email",
-      verifyToken,
-      async (req, res) => {
-        const email = req.params.email;
-        // console.log(email)
-        if (email !== req.user.email) {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
 
-        const query = { email: email };
-        const user = await userCollection.findOne(query);
-        let entertainmentManager = false;
-        if (user) {
-          entertainmentManager = user?.role === "entertainmentManager";
-        }
-        res.send({ entertainmentManager });
-      }
-    );
 
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
@@ -505,6 +497,27 @@ async function run() {
       const result = await eventCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+
+    app.patch('/events/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const event = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          title: event.title,
+          eventType: event.eventType,
+          eventDate: event.eventDate,
+          eventTime: event.eventTime,
+          duration: event.duration,
+          price: event.price,
+          totalTickets: event.totalTickets,
+          location: event.location,
+          details: event.details
+        }
+      }
+      const result = await eventCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
 
     app.delete("/events/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
