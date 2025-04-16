@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 //middleware
 app.use(
@@ -68,6 +69,8 @@ async function run() {
     const orderCollection = client.db("ezyTicket").collection("orders");
     const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
+    const busPaymentCollection = client.db("ezyTicket").collection("busPayments");
+
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -660,12 +663,56 @@ async function run() {
       );
       res.send(result);
     });
+
+    app.post("/payment-bus-ticket", async (req, res) => {
+      const paymentData = req.body;
+      console.log(paymentData)
+      const result = await busPaymentCollection.insertOne(paymentData)
+      //  update bus post
+      const query = {_id: new ObjectId(paymentData.busPostId)}
+      const findPost = await busTicketCollection.findOne(query)
+      const previousSeat = findPost?.bookedSeats;
+      const newSeat = paymentData.selectedSeats;
+      let allSeat = newSeat
+      if(previousSeat){
+        allSeat = [...previousSeat, ...newSeat]
+      }
+
+      console.log("-------------------------------------------------",allSeat)
+      const updateResult = await busTicketCollection.updateOne(query,{
+        $set:{bookedSeats: allSeat}
+      })
+
+      res.send({result, updateResult});
+    })
     // -------------Tavel API End----------------
+
+    // Stripe Payment API crate
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      
+      if(!price){
+        return;
+      }
+      const amount = parseInt(price * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"]
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+
 
     // await client.db("admin").command({ ping: 1 });
     // console.log(
     //   "Pinged your deployment. You successfully connected to MongoDB!"
     // );
+
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
