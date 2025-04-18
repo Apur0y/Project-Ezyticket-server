@@ -29,6 +29,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+//ezyticket
+//ceIzda5WkyaCgaJy
+
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ome3u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const uri = `${process.env.DB_URI}`;
 
@@ -79,6 +82,7 @@ async function run() {
       .db("ezyTicket")
       .collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
+    const busServiceCollection = client.db('ezyTicket').collection("busServices")
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -709,6 +713,23 @@ async function run() {
 
       res.send({ result, updateResult });
     });
+
+
+
+    //bus services added from here
+
+    app.post('/busServices', async(req, res) => {
+      const busService = req.body;
+      const result = await busServiceCollection.insertOne(busService)
+      res.status(200).send({message: 'bus added to database'})
+    })
+
+
+    app.get('/busServices', async(req, res) => {
+      const result = await busServiceCollection.find().toArray()
+      res.send(result)
+    })
+
     // -------------Tavel API End----------------
 
     // await client.db("admin").command({ ping: 1 });
