@@ -7,7 +7,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 //middleware
 app.use(
@@ -62,12 +62,22 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db("ezyTicket").collection("users");
     const eventCollection = client.db("ezyTicket").collection("events");
-    const eventReviewCollection = client.db("ezyTicket").collection("event_review");
-    const busTicketCollection = client.db("ezyTicket").collection("bus_tickets");
-    const movieTicketCollection = client.db("ezyTicket").collection("movie_tickets");
-    const MyWishListCollection = client.db("ezyTicket").collection("mywishlist");
+    const eventReviewCollection = client
+      .db("ezyTicket")
+      .collection("event_review");
+    const busTicketCollection = client
+      .db("ezyTicket")
+      .collection("bus_tickets");
+    const movieTicketCollection = client
+      .db("ezyTicket")
+      .collection("movie_tickets");
+    const MyWishListCollection = client
+      .db("ezyTicket")
+      .collection("mywishlist");
     const orderCollection = client.db("ezyTicket").collection("orders");
-    const cinemaHallCollection = client.db("ezyTicket").collection("cinemahalls");
+    const cinemaHallCollection = client
+      .db("ezyTicket")
+      .collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
 
     app.get("/", (req, res) => {
@@ -210,9 +220,9 @@ async function run() {
     });
 
     //Get Order using transaction Id
-    app.get('/order/:id', async(req, res)=>{
+    app.get("/order/:id", async (req, res) => {
       const transactionId = req.params.id;
-      const query = {transactionId: transactionId}
+      const query = { transactionId: transactionId };
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
@@ -448,8 +458,6 @@ async function run() {
       res.send(movie);
     });
 
-
-
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
       if (!eventCollection) {
@@ -499,7 +507,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch('/events/:id', verifyToken, async (req, res) => {
+    app.patch("/events/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const event = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -513,12 +521,12 @@ async function run() {
           price: event.price,
           totalTickets: event.totalTickets,
           location: event.location,
-          details: event.details
-        }
-      }
+          details: event.details,
+        },
+      };
       const result = await eventCollection.updateOne(filter, updatedDoc);
       res.send(result);
-    })
+    });
 
     app.delete("/events/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -574,6 +582,24 @@ async function run() {
         console.error("Error fetching events:", error);
         res.status(500).send({ message: "Failed to fetch events", error });
       }
+    });
+    // Verify a review
+    app.patch("/verifyEvent/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await eventReviewCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status: req.body.status } }
+      );
+      res.send(result);
+    });
+
+    // Delete a review
+    app.delete("/event-reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await eventReviewCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
     });
 
     // ---------------Events API ends ------------------------
@@ -664,32 +690,31 @@ async function run() {
 
     app.post("/payment-bus-ticket", async (req, res) => {
       const paymentData = req.body;
-      console.log(paymentData)
-      const result = await busPaymentCollection.insertOne(paymentData)
+      console.log(paymentData);
+      const result = await busPaymentCollection.insertOne(paymentData);
       //  update bus post
-      const query = {_id: new ObjectId(paymentData.busPostId)}
-      const findPost = await busTicketCollection.findOne(query)
+      const query = { _id: new ObjectId(paymentData.busPostId) };
+      const findPost = await busTicketCollection.findOne(query);
       const previousSeat = findPost?.bookedSeats;
       const newSeat = paymentData.selectedSeats;
-      let allSeat = newSeat
-      if(previousSeat){
-        allSeat = [...previousSeat, ...newSeat]
+      let allSeat = newSeat;
+      if (previousSeat) {
+        allSeat = [...previousSeat, ...newSeat];
       }
 
-      console.log("-------------------------------------------------",allSeat)
-      const updateResult = await busTicketCollection.updateOne(query,{
-        $set:{bookedSeats: allSeat}
-      })
+      console.log("-------------------------------------------------", allSeat);
+      const updateResult = await busTicketCollection.updateOne(query, {
+        $set: { bookedSeats: allSeat },
+      });
 
-      res.send({result, updateResult});
-    })
+      res.send({ result, updateResult });
+    });
     // -------------Tavel API End----------------
 
     // await client.db("admin").command({ ping: 1 });
     // console.log(
     //   "Pinged your deployment. You successfully connected to MongoDB!"
     // );
-
   } finally {
     // Ensures that the client will close when you finish/error.
     // await client.close();
