@@ -82,7 +82,9 @@ async function run() {
       .db("ezyTicket")
       .collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
-    const busServiceCollection = client.db('ezyTicket').collection("busServices")
+    const busServiceCollection = client
+      .db("ezyTicket")
+      .collection("busServices");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -542,6 +544,7 @@ async function run() {
     app.post("/event-reviews", async (req, res) => {
       const {
         eventId,
+        eventName,
         comment,
         customerEmail,
         customerName,
@@ -559,6 +562,7 @@ async function run() {
         const review = {
           eventId: new ObjectId(eventId),
           comment,
+          eventName,
           customerEmail,
           customerName,
           customerPhoto,
@@ -587,13 +591,17 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch events", error });
       }
     });
-    // Verify a review
+
+    // Example Express route
     app.patch("/verifyEvent/:id", async (req, res) => {
       const id = req.params.id;
-      const result = await eventReviewCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { status: req.body.status } }
-      );
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: req.body.status, // should be 'verified'
+        },
+      };
+      const result = await eventReviewsCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
@@ -714,21 +722,18 @@ async function run() {
       res.send({ result, updateResult });
     });
 
-
-
     //bus services added from here
 
-    app.post('/busServices', async(req, res) => {
+    app.post("/busServices", async (req, res) => {
       const busService = req.body;
-      const result = await busServiceCollection.insertOne(busService)
-      res.status(200).send({message: 'bus added to database'})
-    })
+      const result = await busServiceCollection.insertOne(busService);
+      res.status(200).send({ message: "bus added to database" });
+    });
 
-
-    app.get('/busServices', async(req, res) => {
-      const result = await busServiceCollection.find().toArray()
-      res.send(result)
-    })
+    app.get("/busServices", async (req, res) => {
+      const result = await busServiceCollection.find().toArray();
+      res.send(result);
+    });
 
     // -------------Tavel API End----------------
 
