@@ -82,7 +82,9 @@ async function run() {
       .db("ezyTicket")
       .collection("cinemahalls");
     const moviesCollection = client.db("ezyTicket").collection("allMovies");
-    const busServiceCollection = client.db('ezyTicket').collection("busServices")
+    const busServiceCollection = client
+      .db("ezyTicket")
+      .collection("busServices");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -434,6 +436,14 @@ async function run() {
       res.send(result);
     });
 
+    // delete a cinema hall
+    app.delete("/cinemahalls/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await cinemaHallCollection.deleteOne(query);
+      res.send(result);
+    });
+
     app.post("/allmovies", async (req, res) => {
       try {
         const movie = req.body;
@@ -714,21 +724,18 @@ async function run() {
       res.send({ result, updateResult });
     });
 
-
-
     //bus services added from here
 
-    app.post('/busServices', async(req, res) => {
+    app.post("/busServices", async (req, res) => {
       const busService = req.body;
-      const result = await busServiceCollection.insertOne(busService)
-      res.status(200).send({message: 'bus added to database'})
-    })
+      const result = await busServiceCollection.insertOne(busService);
+      res.status(200).send({ message: "bus added to database" });
+    });
 
-
-    app.get('/busServices', async(req, res) => {
-      const result = await busServiceCollection.find().toArray()
-      res.send(result)
-    })
+    app.get("/busServices", async (req, res) => {
+      const result = await busServiceCollection.find().toArray();
+      res.send(result);
+    });
 
     // -------------Tavel API End----------------
 
