@@ -436,6 +436,14 @@ async function run() {
       res.send(result);
     });
 
+    // delete a cinema hall
+    app.delete("/cinemahalls/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await cinemaHallCollection.deleteOne(query);
+      res.send(result);
+    });
+
     app.post("/allmovies", async (req, res) => {
       try {
         const movie = req.body;
