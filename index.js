@@ -471,6 +471,36 @@ async function run() {
       const movie = await moviesCollection.findOne({ _id: new ObjectId(id) });
       res.send(movie);
     });
+    // update a specific movie data in the database
+    app.patch("/allmovies/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedMovie = req.body;
+
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            name: updatedMovie.name,
+            description: updatedMovie.description,
+            duration: updatedMovie.duration,
+            category: updatedMovie.category,
+            genre: updatedMovie.genre,
+            actors: updatedMovie.actors,
+            releaseDate: updatedMovie.releaseDate,
+            language: updatedMovie.language,
+            director: updatedMovie.director,
+            imageLink: updatedMovie.imageLink,
+            cinemaHalls: updatedMovie.cinemaHalls,
+          },
+        };
+
+        const result = await moviesCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating movie:", error.message);
+        res.status(500).send({ error: "Failed to update movie" });
+      }
+    });
 
     // ------------Events API-------------
     app.get("/events", async (req, res) => {
