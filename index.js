@@ -443,6 +443,41 @@ async function run() {
       const result = await cinemaHallCollection.deleteOne(query);
       res.send(result);
     });
+    // get a specific cinema hall by id
+    app.get("/cinemahalls/:id", async (req, res) => {
+      const id = req.params.id;
+      const hall = await cinemaHallCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(hall);
+    });
+
+    // update a specific cinema hall data in the database
+    app.patch("/allhalls/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedHall = req.body;
+
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            name: updatedHall.name,
+            location: updatedHall.location,
+            totalSeats: updatedHall.totalSeats,
+            price: updatedHall.price,
+            facilities: updatedHall.facilities,
+            email: updatedHall.email,
+            image: updatedHall.image,
+          },
+        };
+
+        const result = await cinemaHallCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating hall:", error.message);
+        res.status(500).send({ error: "Failed to update hall" });
+      }
+    });
 
     app.post("/allmovies", async (req, res) => {
       try {
