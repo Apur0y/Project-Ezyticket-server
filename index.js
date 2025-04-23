@@ -88,6 +88,9 @@ async function run() {
     const busPaymentCollection = client
       .db("ezyTicket")
       .collection("busPayments");
+    const busFlashDealCollection = client
+      .db("ezyTicket")
+      .collection("travelFlashDeals");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -789,8 +792,6 @@ async function run() {
       if (previousSeat) {
         allSeat = [...previousSeat, ...newSeat];
       }
-
-      console.log("-------------------------------------------------", allSeat);
       const updateResult = await busTicketCollection.updateOne(query, {
         $set: { bookedSeats: allSeat },
       });
@@ -811,7 +812,15 @@ async function run() {
       res.send(result);
     });
 
+             // flash deals api
+    app.get("/bus-flash-deal", async (req, res) => {
+      const result = await busFlashDealCollection.find().toArray();
+      // console.log(result)
+      res.send(result);
+    });
+
     // -------------Tavel API End----------------
+
     // ------------- Stripe Payment----------
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
