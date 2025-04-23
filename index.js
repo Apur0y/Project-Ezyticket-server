@@ -85,6 +85,9 @@ async function run() {
     const busServiceCollection = client
       .db("ezyTicket")
       .collection("busServices");
+    const busPaymentCollection = client
+      .db("ezyTicket")
+      .collection("busPayments");
 
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
@@ -809,6 +812,27 @@ async function run() {
     });
 
     // -------------Tavel API End----------------
+    // ------------- Stripe Payment----------
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+
+      if (!price) {
+        return;
+      }
+
+      const amount = parseInt(price * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"]
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+    // ------------- Stripe Payment----------
 
     // await client.db("admin").command({ ping: 1 });
     // console.log(
