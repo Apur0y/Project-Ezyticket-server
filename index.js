@@ -557,6 +557,20 @@ async function run() {
       }
     });
 
+    // Advertise event api
+    app.get("/topEvents", async (req, res) => {
+      if (!eventCollection) {
+        return res.status(500).send({ message: "Database not initialized" });
+      }
+      try {
+        const events = await eventCollection.find({ advertise: true }).toArray();
+        res.send(events);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        res.status(500).send({ message: "Failed to fetch events", error });
+      }
+    });
+
     app.get("/events/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -812,7 +826,7 @@ async function run() {
       res.send(result);
     });
 
-             // flash deals api
+    // flash deals api
     app.get("/bus-flash-deal", async (req, res) => {
       const result = await busFlashDealCollection.find().toArray();
       // console.log(result)
