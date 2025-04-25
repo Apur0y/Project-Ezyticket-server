@@ -813,6 +813,14 @@ async function run() {
       res.send({ result, updateResult });
     });
 
+    // payment Collection
+    app.get("/payment/:id", async (req, res) => {
+      const transactionId = req.params.id;
+      const query = { transactionId: transactionId };
+      const result = await busPaymentCollection.findOne(query);
+      res.send(result);
+    });
+
     //bus services added from here
 
     app.post("/busServices", async (req, res) => {
