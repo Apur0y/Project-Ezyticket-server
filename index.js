@@ -821,6 +821,12 @@ async function run() {
       res.send(result);
     });
 
+    // sold Tickets api
+    app.get("/sold-ticket", async (req,res)=>{
+      const result = await busPaymentCollection.find().toArray();
+      res.send(result);
+    })
+
     //bus services added from here
 
     app.post("/busServices", async (req, res) => {
