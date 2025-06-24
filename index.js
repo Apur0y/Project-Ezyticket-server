@@ -21,6 +21,7 @@ app.use(
       "https://ezyticket-7198b.web.app",
       "https://ezyticket-7198b.firebaseapp.com",
       "https://ezy-ticket-server.vercel.app",
+      "https://ezy-ticket.vercel.app"
     ],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -92,6 +93,10 @@ async function run() {
     app.get("/", (req, res) => {
       res.send("EzyTicket server is Running");
     });
+
+
+    app.get('/favicon.ico', (req, res) => res.status(204).end())
+
     /* --------------------------------------------------------------
                                 JWT STARTS HERE
     -------------------------------------------------------------- */
