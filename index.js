@@ -21,7 +21,8 @@ app.use(
       "https://ezyticket-7198b.web.app",
       "https://ezyticket-7198b.firebaseapp.com",
       "https://ezy-ticket-server.vercel.app",
-      "https://ezy-ticket.vercel.app"
+      "https://ezy-ticket.vercel.app",
+      "https://project-ezyticket-client-production.up.railway.app"
     ],
     credentials: true,
     optionsSuccessStatus: 200,
